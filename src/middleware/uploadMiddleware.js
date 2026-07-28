@@ -2,14 +2,22 @@ const multer = require('multer');
 const path   = require('path');
 const fs     = require('fs');
 
-// Ensure public/uploads directory exists
+// Ensure public/uploads directory exists (safely catch read-only filesystem on Vercel)
 const uploadDir = path.join(__dirname, '../../public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (e) {}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    if (process.env.VERCEL) {
+      return cb(null, '/tmp');
+    }
+    try {
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    } catch (e) {}
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {

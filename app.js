@@ -7,13 +7,35 @@ const fs       = require('fs');
 
 const app = express();
 
-// Ensure public and uploads directories exist
+// Ensure public and uploads directories exist (safely catch read-only filesystem on Vercel)
 const uploadsDir = path.join(__dirname, 'public/uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (e) {
+  // Ignore read-only filesystem errors on Vercel serverless
 }
 
+// Serverless MongoDB Connection Caching
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected || !process.env.MONGO_URI) return;
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    isConnected = true;
+    console.log('✅ MongoDB connected successfully');
+  } catch (err) {
+    console.error('⚠️  MongoDB connection error:', err.message);
+  }
+};
+
 // Middleware
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -24,6 +46,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve Uploaded Files
 app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static('/tmp'));
 
 // Serve Static Assets from Public
 app.use(express.static(path.join(__dirname, 'public')));
@@ -44,25 +67,12 @@ app.get(['/', '/admin*'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/admin/index.html'));
 });
 
-// Port configuration
+// Port configuration (only listen when running locally)
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
-
-if (MONGO_URI) {
-  mongoose
-    .connect(MONGO_URI)
-    .then(() => {
-      console.log('✅ MongoDB connected successfully');
-    })
-    .catch((err) => {
-      console.error('⚠️  MongoDB connection warning:', err.message);
-    });
-} else {
-  console.warn('⚠️  MONGO_URI environment variable is not defined.');
+if (!process.env.VERCEL && require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
 }
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
 
 module.exports = app;
