@@ -17,16 +17,43 @@ try {
   // Ignore read-only filesystem errors on Vercel serverless
 }
 
-// Serverless MongoDB Connection Caching
+// Disable Mongoose command buffering globally for Serverless (Vercel)
+mongoose.set('bufferCommands', false);
+
+// Global caching for Vercel Serverless Function invocations
+let cached = global.mongoose;
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 const connectDB = async () => {
-  if (mongoose.connection.readyState === 1) return;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
+  }
+
   if (!process.env.MONGO_URI) {
     throw new Error('MONGO_URI Environment Variable is missing in Vercel settings!');
   }
-  await mongoose.connect(process.env.MONGO_URI, {
-    serverSelectionTimeoutMS: 5000,
-  });
-  console.log('✅ MongoDB connected successfully');
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 8000,
+    };
+    cached.promise = mongoose.connect(process.env.MONGO_URI, opts).then((m) => {
+      console.log('✅ MongoDB connected successfully');
+      return m;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
+  return cached.conn;
 };
 
 // Middleware to ensure DB connection before handling requests
