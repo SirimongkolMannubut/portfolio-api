@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio CMS & Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --surface2: #232640;
+      --border: #2e3150;
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --radius: 14px;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ─── LOGIN ─── */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 30% 50%, rgba(99,102,241,.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 20%, rgba(139,92,246,.1) 0%, transparent 50%),
+                  var(--bg);
+    }
+    .login-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 24px; padding: 48px 40px; width: 380px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.5);
+    }
+    .login-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .login-card p  { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+    .login-logo    { width: 48px; height: 48px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border-radius: 14px; display:flex;align-items:center;justify-content:center; font-size:22px; margin-bottom:20px; }
+
+    /* ─── INPUTS ─── */
+    .field { margin-bottom: 18px; }
+    .field label { display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:7px; letter-spacing:.5px; text-transform:uppercase; }
+    .field input, .field textarea, .field select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 14px; font-size: 14px; color: var(--text);
+      font-family: inherit; outline: none; transition: border-color .2s;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 90px; }
+
+    .upload-box {
+      display: flex; gap: 10px; align-items: center; margin-top: 6px;
+    }
+    .file-input-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px;
+      background: var(--surface2); border: 1px dashed var(--accent); border-radius: 8px;
+      color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s;
+    }
+    .file-input-btn:hover { background: rgba(99,102,241,.1); }
+    .img-preview {
+      width: 54px; height: 54px; border-radius: 10px; object-fit: cover;
+      border: 1px solid var(--border); background: var(--surface2); display: none;
+    }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 20px; border-radius: 10px; font-size: 13px;
+      font-weight: 600; border: none; cursor: pointer; transition: all .2s; font-family: inherit;
+    }
+    .btn-primary { background: linear-gradient(135deg,var(--accent),var(--accent2)); color: #fff; }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-success { background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+    .btn-success:hover { background: rgba(16,185,129,.25); }
+    .btn-danger  { background: rgba(239,68,68,.12); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+    .btn-danger:hover  { background: rgba(239,68,68,.22); }
+    .btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover   { border-color: var(--accent); }
+    .btn-full    { width: 100%; justify-content: center; padding: 13px; }
+
+    /* ─── LAYOUT ─── */
+    #app { display: none; min-height: 100vh; }
+    .sidebar {
+      width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+      position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 10;
+    }
+    .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo h2 { font-size: 15px; font-weight: 700; background: linear-gradient(135deg,var(--cyan),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .sidebar-logo p  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 11px; padding: 11px 18px;
+      font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer;
+      border-left: 3px solid transparent; transition: all .2s; user-select: none;
+    }
+    .nav-item:hover  { color: var(--text); background: var(--surface2); }
+    .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(99,102,241,.08); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+
+    .main { margin-left: 240px; padding: 32px; min-height: 100vh; flex: 1; }
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; }
+    .page-header p  { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    /* ─── CARDS ─── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+    }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 20px; display:flex; align-items:center; gap:8px; }
+
+    /* ─── ITEMS LIST ─── */
+    .item-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .item-card:last-child { margin-bottom: 0; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .item-meta  { font-size: 12px; color: var(--muted); }
+    .item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .tag { display:inline-block; background:rgba(99,102,241,.15); color:var(--accent); border:1px solid rgba(99,102,241,.3); border-radius:6px; padding:2px 8px; font-size:11px; font-weight:600; margin:2px 2px 0 0; }
+
+    /* ─── MODAL ─── */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 100;
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 28px; width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0,0,0,.5);
+    }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+    .modal-header h3 { font-size:16px; font-weight:700; }
+    .modal-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:4px; border-radius:6px; }
+    .modal-close:hover { color:var(--text); background:var(--surface2); }
+    .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:22px; }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 999;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 20px; font-size: 13px; font-weight: 500;
+      box-shadow: 0 8px 30px rgba(0,0,0,.4); transform: translateY(80px); opacity: 0;
+      transition: all .3s; display:flex; align-items:center; gap:10px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-color: rgba(16,185,129,.4); }
+    #toast.error   { border-color: rgba(239,68,68,.4); }
+
+    /* ─── TABS PAGE ─── */
+    .tab-page { display: none; }
+    .tab-page.active { display: block; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } .main { margin-left: 0; } .sidebar { width: 100%; position: relative; } }
+
+    .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+    .badge-blue { background:rgba(99,102,241,.15); color:var(--accent); }
+    .badge-green { background:rgba(16,185,129,.15); color:var(--green); }
+
+    /* Code & JSON display */
+    pre.json-view {
+      background: #0d0f17; border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; color: #38bdf8; font-family: monospace; font-size: 12px;
+      max-height: 380px; overflow: auto; white-space: pre-wrap; word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN ═══════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🛡️</div>
+    <h1>Portfolio CMS</h1>
+    <p>เข้าสู่ระบบเพื่อจัดการเนื้อหาและเช็คข้อมูล API</p>
+    <div class="field"><label>Username</label><input id="l-user" type="text" placeholder="admin" value="admin" /></div>
+    <div class="field"><label>Password</label><input id="l-pass" type="password" placeholder="••••••••" /></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">เข้าสู่ระบบ →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h2>⚡ Portfolio CMS</h2>
+      <p>ระบบจัดการเนื้อหาและข้อมูล</p>
+    </div>
+    <nav style="padding:12px 0; flex:1;">
+      <div class="nav-item active" onclick="showTab('profile')"><span class="nav-icon">👤</span> โปรไฟล์</div>
+      <div class="nav-item" onclick="showTab('projects')"><span class="nav-icon">🗂️</span> โปรเจกต์</div>
+      <div class="nav-item" onclick="showTab('skills')"><span class="nav-icon">🛠️</span> ทักษะ</div>
+      <div class="nav-item" onclick="showTab('certificates')"><span class="nav-icon">📜</span> ใบประกาศนียบัตร</div>
+      <div class="nav-item" onclick="showTab('activities')"><span class="nav-icon">📅</span> กิจกรรม</div>
+      <div class="nav-item" onclick="showTab('contact')"><span class="nav-icon">📬</span> ข้อมูลติดต่อ</div>
+      <div class="nav-item" onclick="showTab('inspector')"><span class="nav-icon">🔍</span> เช็คข้อมูล / API</div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/" target="_blank" class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px;text-decoration:none;">🌐 ดูหน้าเว็บหลัก</a>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px;" onclick="openPasswordModal()">🔐 เปลี่ยนรหัสผ่าน</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px;color:var(--red);" onclick="doLogout()">🚪 ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- ── Profile ── -->
+    <div id="tab-profile" class="tab-page active">
+      <div class="page-header">
+        <h1>👤 โปรไฟล์</h1>
+        <p>แก้ไขข้อมูลส่วนตัว อัปโหลดรูปโปรไฟล์</p>
+      </div>
+      <div class="card">
+        <div class="grid-2">
+          <div class="field"><label>ชื่อ - นามสกุล</label><input id="p-name" /></div>
+          <div class="field"><label>ตำแหน่ง / Title</label><input id="p-title" /></div>
+        </div>
+        <div class="field"><label>ประวัติส่วนตัว (Bio)</label><textarea id="p-bio" style="min-height:110px;"></textarea></div>
+        <div class="grid-2">
+          <div class="field"><label>มหาวิทยาลัย</label><input id="p-university" /></div>
+          <div class="field"><label>สาขาวิชา</label><input id="p-faculty" /></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>GPA</label><input id="p-gpa" type="number" step="0.01" /></div>
+          <div class="field">
+            <label>รูปโปรไฟล์ (URL หรือ อัปโหลด)</label>
+            <input id="p-img" placeholder="https://... หรือ /uploads/..." />
+            <div class="upload-box">
+              <label class="file-input-btn">
+                📤 เลือกรูปอัปโหลด
+                <input type="file" id="p-img-file" accept="image/*" style="display:none;" onchange="uploadFile('p-img-file', 'p-img', 'p-img-prev')" />
+              </label>
+              <img id="p-img-prev" class="img-preview" />
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:10px;" onclick="saveProfile()">💾 บันทึกโปรไฟล์</button>
+      </div>
+    </div>
+
+    <!-- ── Projects ── -->
+    <div id="tab-projects" class="tab-page">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1>🗂️ โปรเจกต์ผลงาน</h1><p>จัดการข้อมูลโปรเจกต์ และรูปภาพประกอบ</p></div>
+        <button class="btn btn-primary" onclick="openProjectModal()">+ เพิ่มโปรเจกต์</button>
+      </div>
+      <div id="projects-list"></div>
+    </div>
+
+    <!-- ── Skills ── -->
+    <div id="tab-skills" class="tab-page">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1>🛠️ ทักษะ (Skills)</h1><p>จัดการระดับความเชี่ยวชาญและหมวดหมู่ทักษะ</p></div>
+        <button class="btn btn-primary" onclick="openSkillModal()">+ เพิ่มทักษะ</button>
+      </div>
+      <div id="skills-list"></div>
+    </div>
+
+    <!-- ── Certificates ── -->
+    <div id="tab-certificates" class="tab-page">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1>📜 ใบประกาศนียบัตร (Certificates)</h1><p>จัดการเกียรติบัตรและใบรับรองต่างๆ</p></div>
+        <button class="btn btn-primary" onclick="openCertModal()">+ เพิ่มใบประกาศ</button>
+      </div>
+      <div id="certificates-list"></div>
+    </div>
+
+    <!-- ── Activities ── -->
+    <div id="tab-activities" class="tab-page">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1>📅 กิจกรรม & ประสบการณ์</h1><p>ฝึกงาน อบรม รางวัล และกิจกรรมต่างๆ</p></div>
+        <button class="btn btn-primary" onclick="openActivityModal()">+ เพิ่มกิจกรรม</button>
+      </div>
+      <div id="activities-list"></div>
+    </div>
+
+    <!-- ── Contact ── -->
+    <div id="tab-contact" class="tab-page">
+      <div class="page-header"><h1>📬 ข้อมูลติดต่อ</h1><p>แก้ไขช่องทางการติดต่อทั้งหมด</p></div>
+      <div class="card">
+        <div class="grid-2">
+          <div class="field"><label>📞 เบอร์โทรศัพท์</label><input id="c-phone" /></div>
+          <div class="field"><label>✉️ Email</label><input id="c-email" type="email" /></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>💚 LINE ID</label><input id="c-line" /></div>
+          <div class="field"><label>🐙 GitHub URL</label><input id="c-github" /></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>📘 Facebook URL</label><input id="c-facebook" /></div>
+          <div class="field"><label>🎨 Figma URL</label><input id="c-figma" /></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveContact()">💾 บันทึกข้อมูลติดต่อ</button>
+      </div>
+    </div>
+
+    <!-- ── Data Inspector & API Check ── -->
+    <div id="tab-inspector" class="tab-page">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1>🔍 เช็คข้อมูล & API Inspector</h1><p>ตรวจสอบสถานะของระบบ ความสมบูรณ์ของข้อมูล และเรียกดู Raw JSON</p></div>
+        <button class="btn btn-ghost" onclick="runInspectorCheck()">🔄 รีเฟรชเช็คข้อมูล</button>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="card" style="padding:18px;">
+          <div class="item-meta">สถานะ API Server</div>
+          <div id="insp-api-status" style="font-size:18px;font-weight:700;color:var(--green);margin-top:6px;">Checking...</div>
+        </div>
+        <div class="card" style="padding:18px;">
+          <div class="item-meta">สถานะ ฐานข้อมูล MongoDB</div>
+          <div id="insp-db-status" style="font-size:18px;font-weight:700;color:var(--cyan);margin-top:6px;">Checking...</div>
+        </div>
+        <div class="card" style="padding:18px;">
+          <div class="item-meta">เวลาตอบสนอง (Latency)</div>
+          <div id="insp-latency" style="font-size:18px;font-weight:700;color:var(--text);margin-top:6px;">-- ms</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 สรุปจำนวนข้อมูลในระบบ (Record Summary)</div>
+        <div id="insp-counts" class="grid-3" style="gap:12px;margin-top:12px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between;">
+          <span>📄 JSON Data Live Inspector</span>
+          <select id="insp-endpoint-select" onchange="inspectEndpoint()" style="width:200px;padding:6px 10px;font-size:13px;">
+            <option value="/profile">GET /api/profile</option>
+            <option value="/projects">GET /api/projects</option>
+            <option value="/skills">GET /api/skills</option>
+            <option value="/certificates">GET /api/certificates</option>
+            <option value="/activities">GET /api/activities</option>
+            <option value="/contact">GET /api/contact</option>
+          </select>
+        </div>
+        <div id="insp-completeness" style="margin-bottom:12px;font-size:13px;color:var(--yellow);"></div>
+        <pre id="insp-json-output" class="json-view">กำลังโหลดข้อมูล JSON...</pre>
+      </div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- Project Modal -->
+<div id="modal-project" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-project-title">เพิ่มโปรเจกต์</h3>
+      <button class="modal-close" onclick="closeModal('modal-project')">✕</button>
+    </div>
+    <div class="field"><label>ชื่อโปรเจกต์</label><input id="prj-title" /></div>
+    <div class="field"><label>คำอธิบาย</label><textarea id="prj-desc"></textarea></div>
+    <div class="field"><label>Tech Stack (คั่นด้วยจุลภาค เช่น Flutter, Next.js)</label><input id="prj-tech" placeholder="Flutter, Next.js, MongoDB" /></div>
+    <div class="field">
+      <label>รูปภาพโปรเจกต์ (URL หรือ อัปโหลด)</label>
+      <input id="prj-img" placeholder="/uploads/..." />
+      <div class="upload-box">
+        <label class="file-input-btn">
+          📤 เลือกรูปอัปโหลด
+          <input type="file" id="prj-img-file" accept="image/*" style="display:none;" onchange="uploadFile('prj-img-file', 'prj-img', 'prj-img-prev')" />
+        </label>
+        <img id="prj-img-prev" class="img-preview" />
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>GitHub URL</label><input id="prj-github" /></div>
+      <div class="field"><label>Figma URL</label><input id="prj-figma" /></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>Live URL</label><input id="prj-live" /></div>
+      <div class="field"><label>ลำดับแสดงผล</label><input id="prj-order" type="number" value="1" /></div>
+    </div>
+    <input type="hidden" id="prj-id" />
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-project')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveProject()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Skill Modal -->
+<div id="modal-skill" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-skill-title">เพิ่มทักษะ</h3>
+      <button class="modal-close" onclick="closeModal('modal-skill')">✕</button>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>ชื่อทักษะ</label><input id="sk-name" /></div>
+      <div class="field"><label>หมวดหมู่</label>
+        <select id="sk-cat">
+          <option value="Web">Web</option>
+          <option value="Mobile">Mobile</option>
+          <option value="Database">Database</option>
+          <option value="Tools">Tools</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>ระดับความสามารถ: <span id="sk-level-val">70</span>%</label>
+      <input id="sk-level" type="range" min="0" max="100" value="70" oninput="document.getElementById('sk-level-val').textContent=this.value" style="width:100%;accent-color:var(--accent);margin-top:8px;" />
+    </div>
+    <div class="field"><label>ลำดับแสดงผล</label><input id="sk-order" type="number" value="1" /></div>
+    <input type="hidden" id="sk-id" />
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-skill')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveSkill()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Certificate Modal -->
+<div id="modal-cert" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-cert-title">เพิ่มใบประกาศนียบัตร</h3>
+      <button class="modal-close" onclick="closeModal('modal-cert')">✕</button>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>ชื่อใบประกาศ</label><input id="cert-title" /></div>
+      <div class="field"><label>สถาบัน / องค์กรผู้ออก</label><input id="cert-issuer" /></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>ปี / วันที่ได้รับ</label><input id="cert-date" placeholder="2024" /></div>
+      <div class="field"><label>Credential URL (ถ้ามี)</label><input id="cert-url" placeholder="https://..." /></div>
+    </div>
+    <div class="field">
+      <label>รูปภาพใบประกาศ (URL หรือ อัปโหลด)</label>
+      <input id="cert-img" placeholder="/uploads/..." />
+      <div class="upload-box">
+        <label class="file-input-btn">
+          📤 เลือกรูปอัปโหลด
+          <input type="file" id="cert-img-file" accept="image/*" style="display:none;" onchange="uploadFile('cert-img-file', 'cert-img', 'cert-img-prev')" />
+        </label>
+        <img id="cert-img-prev" class="img-preview" />
+      </div>
+    </div>
+    <div class="field"><label>ลำดับแสดงผล</label><input id="cert-order" type="number" value="1" /></div>
+    <input type="hidden" id="cert-id" />
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cert')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveCert()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Activity Modal -->
+<div id="modal-activity" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-activity-title">เพิ่มกิจกรรม</h3>
+      <button class="modal-close" onclick="closeModal('modal-activity')">✕</button>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>ชื่อกิจกรรม / ตำแหน่ง</label><input id="act-title" /></div>
+      <div class="field"><label>องค์กร / บริษัท</label><input id="act-org" /></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>ช่วงเวลา</label><input id="act-period" placeholder="มิ.ย. - ก.ค. 2567" /></div>
+      <div class="field"><label>ประเภท</label>
+        <select id="act-type">
+          <option value="internship">ฝึกงาน</option>
+          <option value="training">อบรม</option>
+          <option value="award">รางวัล</option>
+          <option value="volunteer">อาสาสมัคร</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>รายละเอียด (แต่ละบรรทัด = 1 bullet)</label><textarea id="act-desc" style="min-height:110px;"></textarea></div>
+    <div class="field"><label>ลำดับแสดงผล</label><input id="act-order" type="number" value="1" /></div>
+    <input type="hidden" id="act-id" />
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-activity')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveActivity()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Password Change Modal -->
+<div id="modal-password" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🔐 เปลี่ยนรหัสผ่าน Admin</h3>
+      <button class="modal-close" onclick="closeModal('modal-password')">✕</button>
+    </div>
+    <div class="field"><label>รหัสผ่านปัจจุบัน</label><input id="pwd-curr" type="password" /></div>
+    <div class="field"><label>รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)</label><input id="pwd-new" type="password" /></div>
+    <div class="field"><label>ยืนยันรหัสผ่านใหม่</label><input id="pwd-confirm" type="password" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-password')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="savePasswordChange()">🔑 ยืนยันเปลี่ยนรหัสผ่าน</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">✅ <span id="toast-msg"></span></div>
+
+<script>
+const API = window.location.origin + '/api';
+let TOKEN = localStorage.getItem('admin_token') || '';
+
+// ─── UTILS ───
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.className = `show ${type}`;
+  setTimeout(() => el.className = '', 3000);
+}
+function headers() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` }; }
+async function api(method, path, body) {
+  const opts = { method, headers: headers() };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (!res.ok) throw new Error((await res.json()).message || 'Error');
+  return res.json();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+
+// ─── FILE UPLOAD HANDLER ───
+async function uploadFile(fileInputId, targetUrlInputId, previewImgId) {
+  const fileInput = document.getElementById(fileInputId);
+  if (!fileInput.files || !fileInput.files[0]) return;
+
+  const file = fileInput.files[0];
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    toast('⏳ กำลังอัปโหลดรูปภาพ...');
+    const res = await fetch(API + '/upload', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${TOKEN}` },
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Upload failed');
+
+    document.getElementById(targetUrlInputId).value = data.url;
+    if (previewImgId) {
+      const prevEl = document.getElementById(previewImgId);
+      prevEl.src = data.url;
+      prevEl.style.display = 'block';
+    }
+    toast('✅ อัปโหลดรูปภาพสำเร็จ!');
+  } catch (err) {
+    toast('❌ ' + err.message, 'error');
+  }
+}
+
+// ─── AUTH ───
+async function doLogin() {
+  const username = document.getElementById('l-user').value;
+  const password = document.getElementById('l-pass').value;
+  try {
+    const { token } = await api('POST', '/auth/login', { username, password });
+    TOKEN = token;
+    localStorage.setItem('admin_token', token);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadAll();
+  } catch(e) { toast(e.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error'); }
+}
+function doLogout() {
+  localStorage.removeItem('admin_token');
+  TOKEN = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+function openPasswordModal() {
+  document.getElementById('pwd-curr').value = '';
+  document.getElementById('pwd-new').value = '';
+  document.getElementById('pwd-confirm').value = '';
+  openModal('modal-password');
+}
+async function savePasswordChange() {
+  const currentPassword = document.getElementById('pwd-curr').value;
+  const newPassword = document.getElementById('pwd-new').value;
+  const confirmPassword = document.getElementById('pwd-confirm').value;
+
+  if (!currentPassword || !newPassword) return toast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+  if (newPassword !== confirmPassword) return toast('รหัสผ่านใหม่ไม่ตรงกัน', 'error');
+
+  try {
+    await api('POST', '/auth/change-password', { currentPassword, newPassword });
+    toast('✅ เปลี่ยนรหัสผ่านสำเร็จเรียบร้อย');
+    closeModal('modal-password');
+  } catch (e) {
+    toast('❌ ' + e.message, 'error');
+  }
+}
+
+// ─── TABS ───
+function showTab(name) {
+  document.querySelectorAll('.tab-page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  if (name === 'profile')      loadProfile();
+  if (name === 'projects')     loadProjects();
+  if (name === 'skills')       loadSkills();
+  if (name === 'certificates') loadCertificates();
+  if (name === 'activities')   loadActivities();
+  if (name === 'contact')      loadContact();
+  if (name === 'inspector')    runInspectorCheck();
+}
+function loadAll() { loadProfile(); loadProjects(); loadSkills(); loadCertificates(); loadActivities(); loadContact(); }
+
+// ─── PROFILE ───
+async function loadProfile() {
+  try {
+    const d = await api('GET', '/profile');
+    document.getElementById('p-name').value       = d.name || '';
+    document.getElementById('p-title').value      = d.title || '';
+    document.getElementById('p-bio').value        = d.bio || '';
+    document.getElementById('p-university').value = d.university || '';
+    document.getElementById('p-faculty').value    = d.faculty || '';
+    document.getElementById('p-gpa').value        = d.gpa || '';
+    document.getElementById('p-img').value        = d.profileImage || '';
+    if (d.profileImage) {
+      const pEl = document.getElementById('p-img-prev');
+      pEl.src = d.profileImage; pEl.style.display = 'block';
+    }
+  } catch(e) {}
+}
+async function saveProfile() {
+  try {
+    await api('PUT', '/profile', {
+      name: document.getElementById('p-name').value,
+      title: document.getElementById('p-title').value,
+      bio: document.getElementById('p-bio').value,
+      university: document.getElementById('p-university').value,
+      faculty: document.getElementById('p-faculty').value,
+      gpa: parseFloat(document.getElementById('p-gpa').value) || 0,
+      profileImage: document.getElementById('p-img').value,
+    });
+    toast('✅ บันทึกโปรไฟล์สำเร็จ');
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ─── PROJECTS ───
+async function loadProjects() {
+  const data = await api('GET', '/projects');
+  const el = document.getElementById('projects-list');
+  if (!data.length) { el.innerHTML = '<div class="card" style="text-align:center;color:var(--muted);padding:40px;">ยังไม่มีโปรเจกต์</div>'; return; }
+  el.innerHTML = data.map(p => `
+    <div class="item-card">
+      ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:70px;height:70px;border-radius:8px;object-fit:cover;" />` : ''}
+      <div class="item-info">
+        <div class="item-title">${p.title}</div>
+        <div class="item-meta" style="margin:5px 0 8px;">${p.description.substring(0,100)}...</div>
+        ${p.techStack.map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px;" onclick='editProject(${JSON.stringify(p)})'>✏️ แก้ไข</button>
+        <button class="btn btn-danger" style="padding:7px 12px;font-size:12px;" onclick="deleteProject('${p._id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+function openProjectModal(p = null) {
+  document.getElementById('modal-project-title').textContent = p ? 'แก้ไขโปรเจกต์' : 'เพิ่มโปรเจกต์';
+  document.getElementById('prj-id').value     = p?._id || '';
+  document.getElementById('prj-title').value  = p?.title || '';
+  document.getElementById('prj-desc').value   = p?.description || '';
+  document.getElementById('prj-tech').value   = p?.techStack?.join(', ') || '';
+  document.getElementById('prj-img').value    = p?.imageUrl || '';
+  document.getElementById('prj-github').value = p?.githubUrl || '';
+  document.getElementById('prj-figma').value  = p?.figmaUrl || '';
+  document.getElementById('prj-live').value   = p?.liveUrl || '';
+  document.getElementById('prj-order').value  = p?.order || 1;
+  const pEl = document.getElementById('prj-img-prev');
+  if (p?.imageUrl) { pEl.src = p.imageUrl; pEl.style.display = 'block'; } else { pEl.style.display = 'none'; }
+  openModal('modal-project');
+}
+function editProject(p) { openProjectModal(p); }
+async function saveProject() {
+  const id = document.getElementById('prj-id').value;
+  const body = {
+    title:       document.getElementById('prj-title').value,
+    description: document.getElementById('prj-desc').value,
+    techStack:   document.getElementById('prj-tech').value.split(',').map(s=>s.trim()).filter(Boolean),
+    imageUrl:    document.getElementById('prj-img').value,
+    githubUrl:   document.getElementById('prj-github').value,
+    figmaUrl:    document.getElementById('prj-figma').value,
+    liveUrl:     document.getElementById('prj-live').value,
+    order:       parseInt(document.getElementById('prj-order').value) || 1,
+  };
+  try {
+    if (id) await api('PUT', `/projects/${id}`, body);
+    else    await api('POST', '/projects', body);
+    closeModal('modal-project');
+    loadProjects();
+    toast('✅ บันทึกโปรเจกต์สำเร็จ');
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function deleteProject(id) {
+  if (!confirm('ยืนยันลบโปรเจกต์นี้?')) return;
+  try { await api('DELETE', `/projects/${id}`); loadProjects(); toast('🗑️ ลบแล้ว'); }
+  catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ─── SKILLS ───
+const CATS = { Web:'🌐 Web', Mobile:'📱 Mobile', Database:'🗄️ Database', Tools:'🔧 Tools' };
+async function loadSkills() {
+  const data = await api('GET', '/skills');
+  const grouped = {};
+  data.forEach(s => { if (!grouped[s.category]) grouped[s.category] = []; grouped[s.category].push(s); });
+  const el = document.getElementById('skills-list');
+  el.innerHTML = Object.entries(grouped).map(([cat, skills]) => `
+    <div class="card">
+      <div class="card-title">${CATS[cat] || cat}</div>
+      ${skills.map(s => `
+        <div class="item-card">
+          <div class="item-info">
+            <div class="item-title">${s.name}</div>
+            <div style="margin-top:7px;background:var(--bg);border-radius:6px;overflow:hidden;height:5px;">
+              <div style="width:${s.level}%;height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:6px;"></div>
+            </div>
+            <div class="item-meta" style="margin-top:4px;">${s.level}%</div>
+          </div>
+          <div class="item-actions">
+            <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px;" onclick='editSkill(${JSON.stringify(s)})'>✏️</button>
+            <button class="btn btn-danger" style="padding:7px 12px;font-size:12px;" onclick="deleteSkill('${s._id}')">🗑️</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+function openSkillModal(s = null) {
+  document.getElementById('modal-skill-title').textContent = s ? 'แก้ไขทักษะ' : 'เพิ่มทักษะ';
+  document.getElementById('sk-id').value    = s?._id || '';
+  document.getElementById('sk-name').value  = s?.name || '';
+  document.getElementById('sk-cat').value   = s?.category || 'Web';
+  document.getElementById('sk-level').value = s?.level ?? 70;
+  document.getElementById('sk-level-val').textContent = s?.level ?? 70;
+  document.getElementById('sk-order').value = s?.order || 1;
+  openModal('modal-skill');
+}
+function editSkill(s) { openSkillModal(s); }
+async function saveSkill() {
+  const id = document.getElementById('sk-id').value;
+  const body = {
+    name:     document.getElementById('sk-name').value,
+    category: document.getElementById('sk-cat').value,
+    level:    parseInt(document.getElementById('sk-level').value),
+    order:    parseInt(document.getElementById('sk-order').value) || 1,
+  };
+  try {
+    if (id) await api('PUT', `/skills/${id}`, body);
+    else    await api('POST', '/skills', body);
+    closeModal('modal-skill');
+    loadSkills();
+    toast('✅ บันทึกทักษะสำเร็จ');
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function deleteSkill(id) {
+  if (!confirm('ยืนยันลบทักษะนี้?')) return;
+  try { await api('DELETE', `/skills/${id}`); loadSkills(); toast('🗑️ ลบแล้ว'); }
+  catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ─── CERTIFICATES ───
+async function loadCertificates() {
+  const data = await api('GET', '/certificates');
+  const el = document.getElementById('certificates-list');
+  if (!data.length) { el.innerHTML = '<div class="card" style="text-align:center;color:var(--muted);padding:40px;">ยังไม่มีใบประกาศนียบัตร</div>'; return; }
+  el.innerHTML = data.map(c => `
+    <div class="item-card">
+      ${c.imageUrl ? `<img src="${c.imageUrl}" style="width:70px;height:70px;border-radius:8px;object-fit:cover;" />` : ''}
+      <div class="item-info">
+        <div class="item-title">${c.title}</div>
+        <div class="item-meta">${c.issuer} · ${c.issueDate || 'N/A'}</div>
+        ${c.credentialUrl ? `<a href="${c.credentialUrl}" target="_blank" style="font-size:12px;color:var(--cyan);margin-top:4px;display:inline-block;">🔗 ดูเกียรติบัตรจริง</a>` : ''}
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px;" onclick='editCert(${JSON.stringify(c)})'>✏️ แก้ไข</button>
+        <button class="btn btn-danger" style="padding:7px 12px;font-size:12px;" onclick="deleteCert('${c._id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+function openCertModal(c = null) {
+  document.getElementById('modal-cert-title').textContent = c ? 'แก้ไขใบประกาศ' : 'เพิ่มใบประกาศ';
+  document.getElementById('cert-id').value     = c?._id || '';
+  document.getElementById('cert-title').value  = c?.title || '';
+  document.getElementById('cert-issuer').value = c?.issuer || '';
+  document.getElementById('cert-date').value   = c?.issueDate || '';
+  document.getElementById('cert-url').value    = c?.credentialUrl || '';
+  document.getElementById('cert-img').value    = c?.imageUrl || '';
+  document.getElementById('cert-order').value  = c?.order || 1;
+  const pEl = document.getElementById('cert-img-prev');
+  if (c?.imageUrl) { pEl.src = c.imageUrl; pEl.style.display = 'block'; } else { pEl.style.display = 'none'; }
+  openModal('modal-cert');
+}
+function editCert(c) { openCertModal(c); }
+async function saveCert() {
+  const id = document.getElementById('cert-id').value;
+  const body = {
+    title:         document.getElementById('cert-title').value,
+    issuer:        document.getElementById('cert-issuer').value,
+    issueDate:     document.getElementById('cert-date').value,
+    credentialUrl: document.getElementById('cert-url').value,
+    imageUrl:      document.getElementById('cert-img').value,
+    order:         parseInt(document.getElementById('cert-order').value) || 1,
+  };
+  try {
+    if (id) await api('PUT', `/certificates/${id}`, body);
+    else    await api('POST', '/certificates', body);
+    closeModal('modal-cert');
+    loadCertificates();
+    toast('✅ บันทึกใบประกาศสำเร็จ');
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function deleteCert(id) {
+  if (!confirm('ยืนยันลบใบประกาศนี้?')) return;
+  try { await api('DELETE', `/certificates/${id}`); loadCertificates(); toast('🗑️ ลบแล้ว'); }
+  catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ─── ACTIVITIES ───
+const TYPE_LABEL = { internship:'ฝึกงาน', training:'อบรม', award:'รางวัล', volunteer:'อาสาสมัคร' };
+async function loadActivities() {
+  const data = await api('GET', '/activities');
+  const el = document.getElementById('activities-list');
+  if (!data.length) { el.innerHTML = '<div class="card" style="text-align:center;color:var(--muted);padding:40px;">ยังไม่มีกิจกรรม</div>'; return; }
+  el.innerHTML = data.map(a => `
+    <div class="item-card">
+      <div class="item-info">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div class="item-title">${a.title}</div>
+          <span class="badge badge-blue">${TYPE_LABEL[a.type] || a.type}</span>
+        </div>
+        <div class="item-meta">${a.organization} · ${a.period}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px;" onclick='editActivity(${JSON.stringify(a)})'>✏️ แก้ไข</button>
+        <button class="btn btn-danger" style="padding:7px 12px;font-size:12px;" onclick="deleteActivity('${a._id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+function openActivityModal(a = null) {
+  document.getElementById('modal-activity-title').textContent = a ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรม';
+  document.getElementById('act-id').value     = a?._id || '';
+  document.getElementById('act-title').value  = a?.title || '';
+  document.getElementById('act-org').value    = a?.organization || '';
+  document.getElementById('act-period').value = a?.period || '';
+  document.getElementById('act-type').value   = a?.type || 'training';
+  document.getElementById('act-desc').value   = a?.description?.join('\n') || '';
+  document.getElementById('act-order').value  = a?.order || 1;
+  openModal('modal-activity');
+}
+function editActivity(a) { openActivityModal(a); }
+async function saveActivity() {
+  const id = document.getElementById('act-id').value;
+  const body = {
+    title:        document.getElementById('act-title').value,
+    organization: document.getElementById('act-org').value,
+    period:       document.getElementById('act-period').value,
+    type:         document.getElementById('act-type').value,
+    description:  document.getElementById('act-desc').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    order:        parseInt(document.getElementById('act-order').value) || 1,
+  };
+  try {
+    if (id) await api('PUT', `/activities/${id}`, body);
+    else    await api('POST', '/activities', body);
+    closeModal('modal-activity');
+    loadActivities();
+    toast('✅ บันทึกกิจกรรมสำเร็จ');
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function deleteActivity(id) {
+  if (!confirm('ยืนยันลบกิจกรรมนี้?')) return;
+  try { await api('DELETE', `/activities/${id}`); loadActivities(); toast('🗑️ ลบแล้ว'); }
+  catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ─── CONTACT ───
+async function loadContact() {
+  try {
+    const d = await api('GET', '/contact');
+    document.getElementById('c-phone').value    = d.phone || '';
+    document.getElementById('c-email').value    = d.email || '';
+    document.getElementById('c-line').value     = d.lineId || '';
+    document.getElementById('c-github').value   = d.github || '';
+    document.getElementById('c-facebook').value = d.facebook || '';
+    document.getElementById('c-figma').value    = d.figmaUrl || '';
+  } catch(e) {}
+}
+async function saveContact() {
+  try {
+    await api('PUT', '/contact', {
+      phone:    document.getElementById('c-phone').value,
+      email:    document.getElementById('c-email').value,
+      lineId:   document.getElementById('c-line').value,
+      github:   document.getElementById('c-github').value,
+      facebook: document.getElementById('c-facebook').value,
+      figmaUrl: document.getElementById('c-figma').value,
+    });
+    toast('✅ บันทึกข้อมูลติดต่อสำเร็จ');
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ─── INSPECTOR & HEALTH CHECK ───
+async function runInspectorCheck() {
+  const start = Date.now();
+  try {
+    const profileRes = await fetch(API + '/profile');
+    const latency = Date.now() - start;
+    document.getElementById('insp-api-status').textContent = '🟢 Online (200 OK)';
+    document.getElementById('insp-api-status').style.color = 'var(--green)';
+    document.getElementById('insp-latency').textContent = `${latency} ms`;
+
+    if (profileRes.ok) {
+      document.getElementById('insp-db-status').textContent = '🟢 Connected & Queryable';
+      document.getElementById('insp-db-status').style.color = 'var(--cyan)';
+    } else {
+      document.getElementById('insp-db-status').textContent = '🟡 No Profile / Initializing';
+    }
+
+    // Load Counts
+    const [prof, prjs, sks, certs, acts, cnt] = await Promise.all([
+      api('GET', '/profile').catch(() => ({})),
+      api('GET', '/projects').catch(() => []),
+      api('GET', '/skills').catch(() => []),
+      api('GET', '/certificates').catch(() => []),
+      api('GET', '/activities').catch(() => []),
+      api('GET', '/contact').catch(() => ({}))
+    ]);
+
+    const countsEl = document.getElementById('insp-counts');
+    countsEl.innerHTML = `
+      <div style="background:var(--surface2);padding:12px;border-radius:8px;">
+        <div style="font-size:11px;color:var(--muted);">โปรไฟล์</div>
+        <div style="font-size:16px;font-weight:700;margin-top:2px;">${prof.name ? '✅ สมบูรณ์' : '⚠️ ยังไม่ตั้งค่า'}</div>
+      </div>
+      <div style="background:var(--surface2);padding:12px;border-radius:8px;">
+        <div style="font-size:11px;color:var(--muted);">จำนวนโปรเจกต์</div>
+        <div style="font-size:16px;font-weight:700;margin-top:2px;">${prjs.length} รายการ</div>
+      </div>
+      <div style="background:var(--surface2);padding:12px;border-radius:8px;">
+        <div style="font-size:11px;color:var(--muted);">จำนวนทักษะ</div>
+        <div style="font-size:16px;font-weight:700;margin-top:2px;">${sks.length} รายการ</div>
+      </div>
+      <div style="background:var(--surface2);padding:12px;border-radius:8px;">
+        <div style="font-size:11px;color:var(--muted);">ใบประกาศนียบัตร</div>
+        <div style="font-size:16px;font-weight:700;margin-top:2px;">${certs.length} รายการ</div>
+      </div>
+      <div style="background:var(--surface2);padding:12px;border-radius:8px;">
+        <div style="font-size:11px;color:var(--muted);">จำนวนกิจกรรม</div>
+        <div style="font-size:16px;font-weight:700;margin-top:2px;">${acts.length} รายการ</div>
+      </div>
+      <div style="background:var(--surface2);padding:12px;border-radius:8px;">
+        <div style="font-size:11px;color:var(--muted);">ข้อมูลติดต่อ</div>
+        <div style="font-size:16px;font-weight:700;margin-top:2px;">${cnt.email ? '✅ ตั้งค่าแล้ว' : '⚠️ ยังไม่ครบ'}</div>
+      </div>
+    `;
+
+    inspectEndpoint();
+  } catch (err) {
+    document.getElementById('insp-api-status').textContent = '🔴 Offline / Error';
+    document.getElementById('insp-api-status').style.color = 'var(--red)';
+  }
+}
+
+async function inspectEndpoint() {
+  const endpoint = document.getElementById('insp-endpoint-select').value;
+  const jsonPre = document.getElementById('insp-json-output');
+  const compEl = document.getElementById('insp-completeness');
+
+  try {
+    jsonPre.textContent = 'กำลังโหลด...';
+    const data = await api('GET', endpoint);
+    jsonPre.textContent = JSON.stringify(data, null, 2);
+
+    if (Array.isArray(data)) {
+      compEl.textContent = `✅ เรียกดู ${endpoint} สำเร็จ: พบข้อมูลทั้งหมด ${data.length} รายการ`;
+    } else if (typeof data === 'object' && Object.keys(data).length > 0) {
+      compEl.textContent = `✅ เรียกดู ${endpoint} สำเร็จ: ข้อมูลสมบูรณ์ (${Object.keys(data).length} ฟิลด์)`;
+    } else {
+      compEl.textContent = `⚠️ เรียกดู ${endpoint} สำเร็จ แต่ยังไม่มีข้อมูลในระบบ`;
+    }
+  } catch (err) {
+    jsonPre.textContent = `Error loading endpoint: ${err.message}`;
+    compEl.textContent = `❌ เกิดข้อผิดพลาดในการดึงข้อมูลจาก ${endpoint}`;
+  }
+}
+
+// ─── INIT ───
+window.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin(); });
+if (TOKEN) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  loadAll();
+}
+</script>
+</body>
+</html>
