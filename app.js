@@ -18,22 +18,26 @@ try {
 }
 
 // Serverless MongoDB Connection Caching
-let isConnected = false;
 const connectDB = async () => {
-  if (isConnected || !process.env.MONGO_URI) return;
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    isConnected = true;
-    console.log('✅ MongoDB connected successfully');
-  } catch (err) {
-    console.error('⚠️  MongoDB connection error:', err.message);
+  if (mongoose.connection.readyState === 1) return;
+  if (!process.env.MONGO_URI) {
+    throw new Error('MONGO_URI Environment Variable is missing in Vercel settings!');
   }
+  await mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 5000,
+  });
+  console.log('✅ MongoDB connected successfully');
 };
 
-// Middleware
+// Middleware to ensure DB connection before handling requests
 app.use(async (req, res, next) => {
-  await connectDB();
-  next();
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('⚠️ Database connection failed:', err.message);
+    res.status(500).json({ message: 'Database Connection Error: ' + err.message });
+  }
 });
 
 app.use(cors({
