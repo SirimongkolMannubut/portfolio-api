@@ -92,6 +92,7 @@ app.use('/api/activities',   require('./src/routes/activities'));
 app.use('/api/certificates', require('./src/routes/certificates'));
 app.use('/api/contact',      require('./src/routes/contact'));
 app.use('/api/upload',       require('./src/routes/upload'));
+app.use('/api/ai',           require('./src/routes/aiRoutes'));
 
 // Serve Admin Dashboard for Root (/) and /admin routes
 app.get(['/', '/admin*'], (req, res) => {
