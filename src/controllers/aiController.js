@@ -48,20 +48,44 @@ exports.chatWithAI = async (req, res) => {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-1.5-flash or gemini-2.0-flash
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
-      systemInstruction: SYSTEM_PROMPT 
-    });
+    // รุ่นที่ยังเปิดให้ใช้จริง (1.5 / 2.0 / 2.5 ถูกปิดสำหรับผู้ใช้ใหม่แล้ว → 404)
+    const MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
 
-    const chatHistory = (history || []).map((h) => ({
-      role: h.role === 'user' ? 'user' : 'model',
-      parts: [{ text: h.content }],
-    }));
+    // ประวัติต้องเริ่มด้วย user และสลับ user/model ไม่งั้น Gemini ตอบ 400
+    const chatHistory = [];
+    for (const h of (history || []).slice(-10)) {
+      const role = h && h.role === 'user' ? 'user' : 'model';
+      const turnText = String((h && h.content) || '').trim();
+      if (!turnText) continue;
+      if (!chatHistory.length && role === 'model') continue;
+      const prev = chatHistory[chatHistory.length - 1];
+      if (prev && prev.role === role) prev.parts[0].text += `\n${turnText}`;
+      else chatHistory.push({ role, parts: [{ text: turnText }] });
+    }
 
-    const chat = model.startChat({ history: chatHistory });
-    const result = await chat.sendMessage(message);
-    const responseText = result.response.text();
+    let responseText = '';
+    let lastError = null;
+    for (const modelName of MODELS) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: SYSTEM_PROMPT,
+          generationConfig: { temperature: 0.7 },
+        });
+        const result = await model.startChat({ history: chatHistory }).sendMessage(message);
+        const text = result.response.text();
+        if (text && text.trim()) {
+          responseText = text.trim();
+          break;
+        }
+      } catch (err) {
+        lastError = err;
+        const status = Number(err && err.status) || 0;
+        // คีย์ผิด / ไม่มีสิทธิ์: เปลี่ยนรุ่นก็ไม่ช่วย
+        if ([400, 401, 403].includes(status)) break;
+      }
+    }
+    if (!responseText) throw lastError || new Error('All Gemini models failed');
 
     return res.json({ reply: responseText });
   } catch (error) {
